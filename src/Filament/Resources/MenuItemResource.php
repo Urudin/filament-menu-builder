@@ -22,6 +22,8 @@ class MenuItemResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-bars-3';
 
+    protected static bool $shouldRegisterNavigation = false;
+
     public static function getNavigationGroup(): ?string
     {
         return __('filament-menu-builder::menu-builder.navigation_group');
@@ -113,89 +115,6 @@ class MenuItemResource extends Resource
                         ->hidden(fn ($get) => $get('type') != 'link')
                         ->maxLength(255)
                         ->required(fn ($get) => $get('type') == 'link'),
-                    // ROUTE
-                    Select::make('route')
-                        ->label(__('filament-menu-builder::menu-builder.form_labels.route'))
-                        ->searchable()
-                        ->helperText(__('filament-menu-builder::menu-builder.route_helper_text'))
-                        ->options(
-                            function () {
-                                $excludedRoutes = config('filament-menu-builder.exclude_route_names', []);
-
-                                $routes = collect(Route::getRoutes())
-                                    ->filter(function ($route) use ($excludedRoutes) {
-                                        $routeName = $route->getName();
-                                        if (! $routeName) {
-                                            return false;
-                                        }
-
-                                        // Check if the route name matches any of the excluded patterns
-                                        $isExcluded = false;
-                                        foreach ($excludedRoutes as $pattern) {
-                                            if (preg_match($pattern, $routeName)) {
-                                                $isExcluded = true;
-
-                                                break;
-                                            }
-                                        }
-
-                                        return ! $isExcluded;
-                                    })
-                                    ->mapWithKeys(function ($route) {
-                                        return [$route->getName() => $route->getName()];
-                                    });
-
-                                return $routes;
-                            }
-                        )
-                        ->hidden(fn ($get) => $get('type') != 'route')
-                        ->required(fn ($get) => $get('type') == 'route')
-                        ->afterStateUpdated(function (callable $set, callable $get, $state) {
-                            if ($state === null) {
-                                return [];
-                            }
-                            $route = app('router')->getRoutes()->getByName($state);
-                            if (! $route) {
-                                return [];
-                            }
-
-                            $uri = $route->uri();
-
-                            preg_match_all('/\{(\w+?)\}/', $uri, $matches);
-                            $parameters = $matches[1];
-
-                            if (empty($parameters)) {
-                                return [];
-                            }
-
-                            $set('route_parameters', array_fill_keys($parameters, null));
-                        })
-                        ->reactive(),
-                    KeyValue::make('route_parameters')
-                        ->label(__('filament-menu-builder::menu-builder.form_labels.route_parameters'))
-                        ->hidden(fn ($get) => $get('type') != 'route')
-                        ->helperText(function ($get, $set, $operation) {
-                            if ($get('route') === null) {
-                                return __('filament-menu-builder::menu-builder.route_parameters_empty_helper_text');
-                            }
-                            $route = app('router')->getRoutes()->getByName($get('route'));
-                            if (! $route) {
-                                return __('filament-menu-builder::menu-builder.route_parameters_not_found_helper_text');
-                            }
-
-                            $uri = $route->uri();
-
-                            preg_match_all('/\{(\w+?)\}/', $uri, $matches);
-                            $parameters = $matches[1];
-
-                            if (empty($parameters)) {
-                                return __('filament-menu-builder::menu-builder.route_parameters_no_parameters_helper_text');
-                            }
-
-                            return __('filament-menu-builder::menu-builder.route_parameters_has_parameters_helper_text', [
-                                'parameters' => implode(', ', $parameters),
-                            ]);
-                        }),
                     // MODEL
                     Select::make('menuable_type')
                         ->label(__('filament-menu-builder::menu-builder.form_labels.menuable_type'))
@@ -223,11 +142,6 @@ class MenuItemResource extends Resource
                         ->hidden(fn ($get) => $get('menuable_type') == null)
                         ->default(false),
                 ]),
-            KeyValue::make('parameters')
-                ->label(__('filament-menu-builder::menu-builder.form_labels.parameters'))
-                ->helperText(__('filament-menu-builder::menu-builder.parameters_helper_text', [
-                    'parameters' => implode(', ', config('filament-menu-builder.usable_parameters', [])),
-                ])),
         ];
     }
 
