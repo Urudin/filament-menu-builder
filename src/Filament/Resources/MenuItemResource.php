@@ -92,6 +92,9 @@ class MenuItemResource extends Resource
             TextInput::make('link_class')
                 ->label(__('filament-menu-builder::menu-builder.form_labels.link_class'))
                 ->maxLength(255),
+            TextInput::make('link_title')
+                ->label('Title')
+                ->maxLength(255),
             TextInput::make('wrapper_class')
                 ->label(__('filament-menu-builder::menu-builder.form_labels.wrapper_class'))
                 ->maxLength(255),
