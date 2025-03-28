@@ -40,6 +40,7 @@ class MenuItem extends Model
         'route',
         'route_parameters',
         'link_class',
+        'link_title',
         'wrapper_class',
         'menu_id',
         'parameters',
